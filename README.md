@@ -4,17 +4,13 @@ Turns a short phone video into a 3D point cloud and mesh where each point is lab
 
 Write-up: [docs/report.pdf](docs/report.pdf)
 
+![demo](docs/demo.gif)
+
+Left: class-colored mesh. Right: labeled point cloud and the YOLO segmentation of frame 0. Full recordings: [demo 1](docs/demo1.mp4) (this scene), [demo 2](docs/demo2.mp4) (a second scene).
+
 ![results](docs/results.png)
 
 Top row: input frame, affine reconstruction, metric reconstruction. Bottom row: YOLO segmentation, labeled 3D points, textured mesh.
-
-<!--
-Optional demo GIF, ~15s, then replace the image above with ![demo](docs/demo.gif):
-1. (2s) Terminal: run the command from "Run it locally" on test_media/multiple.mov. Speed up the log output.
-2. (4s) Play out/multiple/tracked_output.avi (feature tracks drawn over the video).
-3. (5s) The Open3D window that opens at the end: drag to rotate the textured mesh.
-4. (4s) Show out/multiple/q2_S_scaled_labeled.png (3D points colored by YOLO class, with the legend).
--->
 
 ## Why I built this
 
