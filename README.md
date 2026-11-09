@@ -1,4 +1,4 @@
-# 3D-Segmentation
+# Semantic Segmentation on SfM Reconstructed 3D Point Clouds
 
 Turns a short phone video into a 3D point cloud and mesh where each point is labeled with an object class, using structure-from-motion plus a pretrained YOLO11 segmentation model.
 
