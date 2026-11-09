@@ -14,7 +14,7 @@ Top row: input frame, affine reconstruction, metric reconstruction. Bottom row: 
 
 ## Why I built this
 
-Labeled 3D data is expensive. It usually needs LiDAR plus manual annotation, while 2D segmentation models are cheap and good. I wanted to see how far you can get by reconstructing geometry from a handheld video with classic factorization SfM, then projecting per-pixel 2D labels into 3D. It started as my CMPUT 428 project, and the write-up is in [docs/report.pdf](docs/report.pdf).
+Labeled 3D data is expensive. It usually needs LiDAR plus manual annotation, while 2D segmentation models are cheap and good. I wanted to see how far you can get by reconstructing geometry from a handheld video with classic factorization SfM, then projecting per-pixel 2D labels into 3D. I did this as a computer vision research project at the University of Alberta. The full write-up, with the theory, metrics and experiments, is in [docs/report.pdf](docs/report.pdf).
 
 ## Run it locally
 
