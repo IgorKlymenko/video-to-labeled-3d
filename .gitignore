@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# pipeline outputs (out_test/ is a committed sample run)
+out/
+data/
+docs/demo_frames/
+
+# scratch media
+archive_media/

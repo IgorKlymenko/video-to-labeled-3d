@@ -1,4 +1,5 @@
 import os
+import sys
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -85,13 +86,11 @@ def main_1(matrix_path):
     return R, S
 
 def main():
-    matrix1_path = "media/hotel/tracks.txt"
-    matrix2_path = "media/poor/tracks.txt"
-    matrix3_path = "media/good/tracks.txt"
-
-    # test all datasets
-    for matrix_path in [matrix1_path, matrix2_path, matrix3_path]:
-        main_1(matrix_path)
+    # python q1_affine_factorization_method.py <tracks.txt>
+    if len(sys.argv) < 2:
+        print("usage: python q1_affine_factorization_method.py <tracks.txt>")
+        sys.exit(1)
+    main_1(sys.argv[1])
 
 if __name__ == "__main__":
     main()

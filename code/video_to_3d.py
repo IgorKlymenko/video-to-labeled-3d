@@ -24,6 +24,15 @@ def main() -> None:
     p.add_argument("--max-redetect", type=int, default=40)
     p.add_argument("--track-scale", type=float, default=0.75)
     p.add_argument("--max-frames", type=int, default=50)
+    p.add_argument(
+        "--scale-ref",
+        nargs=3,
+        type=float,
+        metavar=("I", "J", "DIST"),
+        default=None,
+        help="Pin absolute scale: track column indices I, J and their real distance. "
+        "Default: normalize to unit RMS radius.",
+    )
     args = p.parse_args()
 
     video = os.path.abspath(args.video)
@@ -49,6 +58,11 @@ def main() -> None:
         "max_redetect": args.max_redetect,
         "track_scale": float(args.track_scale),
         "feature_use_clahe": args.feature_clahe,
+        "scale_ref": (
+            (int(args.scale_ref[0]), int(args.scale_ref[1]), args.scale_ref[2])
+            if args.scale_ref
+            else None
+        ),
     }
     result = video_to_metric_structure(video, out_dir, **pipeline_args)
     if result is None:
