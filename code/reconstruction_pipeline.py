@@ -408,11 +408,20 @@ def run_metric_reconstruction(
     tracks_txt_path: str,
     show_plot: bool = True,
     plot_first_frame: bool = True,
+    scale_ref: Optional[Tuple[int, int, float]] = None,
 ):
+    # scale_ref=(i, j, real_distance) pins absolute scale; otherwise unit RMS radius.
+    ref_points = None
+    ref_distance = None
+    if scale_ref is not None:
+        ref_points = (int(scale_ref[0]), int(scale_ref[1]))
+        ref_distance = float(scale_ref[2])
     return main_2(
         tracks_txt_path,
         show_plot=show_plot,
         plot_first_frame=plot_first_frame,
+        ref_points=ref_points,
+        ref_distance=ref_distance,
     )
 
 
@@ -648,6 +657,7 @@ def video_to_metric_structure(
     mesh_drop_cross_class_triangles: bool = True,
     feature_use_clahe: bool = False,
     dump_metrics: bool = True,
+    scale_ref: Optional[Tuple[int, int, float]] = None,
 ):
     import feature_tracker as ft
 
@@ -686,7 +696,7 @@ def video_to_metric_structure(
         return None
     tracks_txt = os.path.join(out_dir, "tracks.txt")
     S_eucl = run_metric_reconstruction(
-        tracks_txt, show_plot=show_plot, plot_first_frame=False
+        tracks_txt, show_plot=show_plot, plot_first_frame=False, scale_ref=scale_ref
     )
     if show_mesh or save_mesh_obj:
         textured_mesh_from_track_folder(
