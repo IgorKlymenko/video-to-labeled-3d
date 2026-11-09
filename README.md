@@ -2,6 +2,8 @@
 
 Turns a short phone video into a 3D point cloud and mesh where each point is labeled with an object class, using structure-from-motion plus a pretrained YOLO11 segmentation model.
 
+Write-up: [docs/report.pdf](docs/report.pdf)
+
 ![results](docs/results.png)
 
 Top row: input frame, affine reconstruction, metric reconstruction. Bottom row: YOLO segmentation, labeled 3D points, textured mesh.
@@ -16,7 +18,7 @@ Optional demo GIF, ~15s, then replace the image above with ![demo](docs/demo.gif
 
 ## Why I built this
 
-Labeled 3D data is expensive. It usually needs LiDAR plus manual annotation, while 2D segmentation models are cheap and good. I wanted to see how far you can get by reconstructing geometry from a handheld video with classic factorization SfM, then projecting per-pixel 2D labels into 3D. It started as my CMPUT 428 project, and the write-up is in `report.pdf`.
+Labeled 3D data is expensive. It usually needs LiDAR plus manual annotation, while 2D segmentation models are cheap and good. I wanted to see how far you can get by reconstructing geometry from a handheld video with classic factorization SfM, then projecting per-pixel 2D labels into 3D. It started as my CMPUT 428 project, and the write-up is in [docs/report.pdf](docs/report.pdf).
 
 ## Run it locally
 
