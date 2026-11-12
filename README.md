@@ -1,6 +1,6 @@
 # Semantic Segmentation on SfM Reconstructed 3D Point Clouds
 
-Take a few seconds of phone video, get back a 3D point cloud and mesh where every point knows what object it belongs to. Structure-from-motion for the geometry, a pretrained YOLO11 for the labels.
+Take a 15 seconds of phone video, get back a 3D point cloud and mesh where every point knows what object it belongs to. Structure-from-motion for the geometry, a pretrained YOLO11 for the labels.
 
 Write-up: [docs/report.pdf](docs/report.pdf)
 
