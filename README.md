@@ -46,7 +46,7 @@ Where to look:
 - `code/yolo_segmentation.py`, `code/q3_texturing.py` - labels and meshing
 - `code/reconstruction_pipeline.py` - glues it together
 
-## the annoying part
+## why the mesh looks like that
 
 Meshing. There's no real surface reconstruction here. I triangulate the tracked points in 2D on the first frame, which is cheap and hands you UV coordinates for free (frame 0 is the texture). But 2D Delaunay has no idea about depth, so it cheerfully connects a point on the mug to a point on the wall behind it and you get long spikes through space.
 
