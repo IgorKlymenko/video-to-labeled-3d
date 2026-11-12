@@ -12,7 +12,7 @@ Mesh on the left, labeled points and the YOLO mask of frame 0 on the right. Full
 
 ## why care
 
-Labeled 3D data is expensive. You either pay for LiDAR or you pay someone to annotate point clouds by hand, and both scale badly. Meanwhile 2D segmentation is basically solved and free. I think geometry gets you a lot further than people assume: a handheld video, classic factorization SfM, and the per-pixel labels projected into 3D. No generative model, no depth sensor, runs on a laptop.
+Labeled 3D data is expensive. You either pay for LiDAR or you pay someone to annotate point clouds by hand, and both scale badly. Meanwhile 2D segmentation is basically solved and free. I think geometry gets you a lot further than people assume: a handheld video, classic factorization SfM, and the per-pixel labels projected into 3D. No gen models, no depth sensors, and I ran it on my rusty 2022 M1 Mac.
 
 I did this as a computer vision research project at the University of Alberta. Theory, metrics and experiments are in [the report](docs/report.pdf).
 
