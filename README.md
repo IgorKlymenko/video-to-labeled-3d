@@ -1,24 +1,24 @@
 # Semantic Segmentation on SfM Reconstructed 3D Point Clouds
 
-Turns a short phone video into a 3D point cloud and mesh where each point is labeled with an object class, using structure-from-motion plus a pretrained YOLO11 segmentation model.
+Take a few seconds of phone video, get back a 3D point cloud and mesh where every point knows what object it belongs to. Structure-from-motion for the geometry, a pretrained YOLO11 for the labels.
 
 Write-up: [docs/report.pdf](docs/report.pdf)
 
 ![demo](docs/demo.gif)
 
-Left: class-colored mesh. Right: labeled point cloud and the YOLO segmentation of frame 0. Full recordings: [demo 1](docs/demo1.mp4) (this scene), [demo 2](docs/demo2.mp4) (a second scene).
+Mesh on the left, labeled points and the YOLO mask of frame 0 on the right. Full recordings: [demo 1](docs/demo1.mp4), [demo 2](docs/demo2.mp4) (different scene).
 
 ![results](docs/results.png)
 
-Top row: input frame, affine reconstruction, metric reconstruction. Bottom row: YOLO segmentation, labeled 3D points, textured mesh.
+## why care
 
-## Why I built this
+Labeled 3D data is expensive. You either pay for LiDAR or you pay someone to annotate point clouds by hand, and both scale badly. Meanwhile 2D segmentation is basically solved and free. I think geometry gets you a lot further than people assume: a handheld video, classic factorization SfM, and the per-pixel labels projected into 3D. No generative model, no depth sensor, runs on a laptop.
 
-Labeled 3D data is expensive. It usually needs LiDAR plus manual annotation, while 2D segmentation models are cheap and good. I wanted to see how far you can get by reconstructing geometry from a handheld video with classic factorization SfM, then projecting per-pixel 2D labels into 3D. I did this as a computer vision research project at the University of Alberta. The full write-up, with the theory, metrics and experiments, is in [docs/report.pdf](docs/report.pdf).
+I did this as a computer vision research project at the University of Alberta. Theory, metrics and experiments are in [the report](docs/report.pdf).
 
-## Run it locally
+## run it
 
-Needs Python 3.12+. The YOLO weights (`code/yolo11n-seg.pt`) and two sample clips are in the repo. On Apple Silicon the Open3D wheel also needs `brew install libusb`.
+Python 3.12+. Weights (`code/yolo11n-seg.pt`) and two test clips are in the repo. On Apple Silicon the Open3D wheel wants `brew install libusb`, which took me a while to figure out.
 
 ```bash
 uv venv --python 3.12 && source .venv/bin/activate
@@ -28,47 +28,45 @@ python video_to_3d.py ../test_media/multiple.mov -o ../out/multiple \
   --yolo yolo11n-seg.pt --feature-max-corners 3000 --max-frames 90
 ```
 
-At the end, an Open3D window opens with the mesh. `--no-mesh` skips building and saving the mesh. Outputs go to `out/multiple/`:
-`tracks.txt`, `tracked_output.avi`, `q2_S_scaled.npy`, `seg_class_maps.npz`, `point_labels.npy`,
-`mesh_reconstruction.obj`, `reconstruction_labeled.ply`, and `metrics.json` / `metrics.txt`.
-`out_test/` is a committed sample run.
+An Open3D window pops up with the mesh at the end (`--no-mesh` to skip). Everything lands in `out/multiple/`: the tracks, the point cloud (`q2_S_scaled.npy`), the mesh (`.obj` / `.ply`), the per-frame class maps, and `metrics.txt`. `out_test/` is a run I committed so you can see what the output looks like without running anything.
 
-To look at an existing run again: `python view_pipeline_3d.py --out-dir ../out/multiple`.
+`python view_pipeline_3d.py --out-dir ../out/multiple` reopens a finished run.
 
-## How it works
+## how it works
 
 ![architecture](docs/architecture.jpg)
 
-Two passes over the video. SfM: Shi-Tomasi corners, pyramidal LK tracking, a 2F x P measurement matrix, rank-3 SVD for affine structure, then a metric upgrade from the orthogonality constraints (Cholesky). Segmentation: YOLO11-seg per frame, then a majority vote across frames gives each track one class. The projection step joins the two and the labeled points get Delaunay-meshed on frame 0.
+Two independent passes over the same video, joined at the end.
 
-- `code/feature_tracker.py`: grid-based corner detection (optional CLAHE), LK tracking with periodic re-detection and a max-jump filter. Writes `tracks.txt`.
-- `code/q1_affine_factorization_method.py` and `code/q2_metric_upgrade.py`: Tomasi-Kanade factorization, then solving for the 3x3 metric correction from the per-frame constraints |r1|=|r2|=1, r1·r2=0.
-- `code/yolo_segmentation.py` and `code/q3_texturing.py`: per-frame class maps, label voting across frames, and meshing. `code/reconstruction_pipeline.py` wires everything together.
+SfM side: Shi-Tomasi corners, pyramidal Lucas-Kanade tracking, stack the tracks into a 2F x P matrix, rank-3 SVD gives affine structure, then the metric upgrade from the usual orthogonality constraints (|r1|=|r2|=1, r1·r2=0, solve for the 3x3 correction, Cholesky). Segmentation side: YOLO11-seg on every frame. Each track gets the class it was inside most often across frames. Then Delaunay on frame 0 to mesh it.
 
-## The hard part
+Where to look:
+- `code/feature_tracker.py` - detection, tracking, re-detection, writes `tracks.txt`
+- `code/q1_affine_factorization_method.py`, `code/q2_metric_upgrade.py` - the factorization math
+- `code/yolo_segmentation.py`, `code/q3_texturing.py` - labels and meshing
+- `code/reconstruction_pipeline.py` - glues it together
 
-Meshing a sparse, noisy point cloud without a proper surface reconstruction step. I triangulate the tracked points in 2D on the first frame with Delaunay, not in 3D. That's cheap and gives UV coordinates for free, so frame 0 becomes the texture. The catch is that 2D Delaunay happily connects a point on the mug to a point on the wall behind it, and you get long spikes through space.
+## the annoying part
 
-So each triangle has to pass three filters (`q3_texturing.py`):
-- longest 2D edge under a fraction of the image diagonal
-- longest 3D edge under a fraction of the point cloud's bounding-box diagonal
-- no two vertices carrying different non-background YOLO labels, since a triangle spanning two objects is almost always a depth discontinuity
+Meshing. There's no real surface reconstruction here. I triangulate the tracked points in 2D on the first frame, which is cheap and hands you UV coordinates for free (frame 0 is the texture). But 2D Delaunay has no idea about depth, so it cheerfully connects a point on the mug to a point on the wall behind it and you get long spikes through space.
 
-Tight thresholds kill the spikes but leave holes. Loose ones keep the surface but let spikes back in. The defaults (0.058 and 0.10) were tuned by eye. If the 3D filter removes everything, it relaxes the limit 1.5x and then falls back to 2D-only rather than returning an empty mesh. The segmentation labels end up doing double duty: they're the output, but they also clean up the geometry.
+Three filters in `q3_texturing.py` deal with that. Drop a triangle if its longest 2D edge is over some fraction of the image diagonal, or its longest 3D edge is over some fraction of the cloud's bounding box, or two of its vertices carry different YOLO classes (a triangle spanning two objects is almost always a depth jump). Tight thresholds kill spikes and leave holes, loose ones keep the surface and let spikes back in. 0.058 and 0.10 were tuned by looking at meshes until they stopped being awful. If the 3D filter wipes out everything it relaxes 1.5x, then gives up and uses 2D only.
 
-A smaller fix that was a real problem: on longer clips the process got OOM-killed. I fixed it by tracking on downscaled grayscale frames, freeing them, and running YOLO in a second streaming pass over the video file instead of holding every BGR frame in memory.
+I like that the labels end up doing two jobs: they're the output, and they also fix the geometry.
 
-## Stack
+Also, longer clips kept getting OOM-killed. Fix was to track on downscaled grayscale frames, free them, and let YOLO stream the file in a second pass instead of holding every frame in RAM.
+
+## stack
 
 Python, NumPy, SciPy, OpenCV, Ultralytics YOLO11, Open3D, Matplotlib.
 
-## Status
+## status
 
-Course project, working end to end on short clips. Known gaps:
-- Factorization assumes an affine camera, so reprojection error is high on handheld video. Bundle adjustment is the obvious next step.
-- Reconstruction is metric only up to scale. By default the cloud is normalized to unit RMS radius; pass `--scale-ref I J DIST` (two track indices and their real distance) to get absolute units.
-- No tests, and dependencies aren't pinned.
+Works end to end on short clips. Rough edges:
+- Affine camera assumption, so reprojection error on handheld video is high. Bundle adjustment would be the next thing.
+- Scale is arbitrary (unit RMS radius by default). `--scale-ref I J DIST` pins it if you know a real distance between two tracked points.
+- No tests. Deps aren't pinned.
 
-## License
+## license
 
-MIT, see `LICENSE`.
+MIT.
